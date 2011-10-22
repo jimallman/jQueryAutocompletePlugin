@@ -1,5 +1,18 @@
 #jQuery Autocomplete Plugin 1.2.2#
 
+##About this fork##
+This is a great plugin, but it doesn't keep track of whether the user has selected 
+from among the suggested values. It would be helpful if the form's submit button would
+be initially disabled, pending a selection from the drop-down menu. If a valid choice is made 
+and accepted, the submit button would be enabled (or at least, the autocomplete widget would
+be marked as valid). If the user makes manual edits, without using the drop-down menu, the form
+would once again be disabled. In addition, CSS classes would be used to mark the field as 
+either `.has-auto-selected-value` or `.has-manual-value`
+
+Ideally, we'd implement this as an option to the plugin, so this "strict" behavior can be 
+implemented without affecting existing installations or unrelated behavior.
+
+
 ##About this jQuery plugin##
 Jörn Zaefferer’s (now deprecated into jQuery UI) [jQuery Autocomplete Plugin](http://bassistance.de/jquery-plugins/jquery-plugin-autocomplete/), with a small modification to enable UP/DOWN arrow keys, allowing navigation of input element text. This is particularly useful in cases where autocomplete is used in a textarea element where navigation of text via UP/DOWN arrow keys may be necessary. The tiny fix is documented with comments in the relevant lines on the development file (jquery.autocomplete.js). The .min and .pack files have the fix without specific annotation within the code.
 
