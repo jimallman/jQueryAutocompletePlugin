@@ -10,6 +10,9 @@
  * With small modifications by Alfonso Gómez-Arzola.
  * See changelog for details.
  *
+ * Additional mods by Jim Allman (jim@ibang.com) to 
+ * disable form (and style input field) if non-matching
+ * values are entered and mustMatch==true
  */
 
 ;(function($) {
@@ -160,6 +163,7 @@ $.Autocompleter = function(input, options) {
 				timeout = setTimeout(onChange, options.delay);
 				break;
 		}
+		updateFormStatus();
 	}).focus(function(){
 		// track whether the field has focus, we shouldn't process any
 		// results if the field no longer has focus
@@ -169,6 +173,7 @@ $.Autocompleter = function(input, options) {
 		if (!config.mouseDownOnSelect) {
 			hideResults();
 		}
+		updateFormStatus();
 	}).click(function() {
 		// show select when clicking in a focused field
 		// but if clickFire is true, don't require field
@@ -201,6 +206,8 @@ $.Autocompleter = function(input, options) {
 		$.each(trimWords($input.val()), function(i, value) {
 			request(value, findValueCallback, findValueCallback);
 		});
+	}).bind("updateFormStatus", function() {
+		updateFormStatus();
 	}).bind("flushCache", function() {
 		cache.flush();
 	}).bind("setOptions", function() {
@@ -246,6 +253,8 @@ $.Autocompleter = function(input, options) {
 		}
 		
 		$input.val(v);
+		// keep track of this, in case they fidget the text back to it
+		$input[0].lastSelected = v;
 		hideResultsNow();
 		$input.trigger("result", [selected.data, selected.value]);
 		return true;
@@ -325,6 +334,7 @@ $.Autocompleter = function(input, options) {
 		select.hide();
 		clearTimeout(timeout);
 		stopLoading();
+
 		if (options.mustMatch) {
 			// call search and run callback
 			$input.search(
@@ -336,17 +346,49 @@ $.Autocompleter = function(input, options) {
 							$input.val( words.join(options.multipleSeparator) + (words.length ? options.multipleSeparator : "") );
 						}
 						else {
-							$input.val( "" );
-							$input.trigger("result", null);
+							// hold existing text so they can keep trying
+							//$input.val( "" );
+							//$input.trigger("result", null);
 						}
 					}
+					updateFormStatus();
+
 				}
 			);
 		}
+
 	};
+
+	function updateFormStatus() {
+		if (options.mustMatch) {
+			var $submit = $input.closest('form').find('input[type=submit]');
+			// forms in a popup might use a cosmetic BUTTON element instead, labeled "Select ~'
+			if ($input.closest('div.ui-dialog').length) {
+				$input.closest('div.ui-dialog').find('button').each(function() {
+					if ($(this).text().indexOf('Select') !== -1) {
+						$submit = $submit.add(this);
+					}
+				});
+			}
+			if (!input.lastSelected || input.lastSelected != $input.val()) {
+				//console.log(">>>> lastSelected: [" + input.lastSelected + "] <" + typeof (input.lastSelected) + "> is different from v: [" + $input.val() + "]!");
+				//console.log('>>> NO MATCH FOUND');
+				$input.addClass('ac_non_matching_input');
+				// disable form submit button
+				$submit.attr('disabled', 'disabled');
+			} else {
+				//console.log(">>>> lastSelected: [" + input.lastSelected + "] <" + typeof (input.lastSelected) + "> matches v: [" + $input.val() + "]!");
+				//console.log('>>> MATCH FOUND');
+				$input.removeClass('ac_non_matching_input');
+				// enable form submit button
+				$submit.removeAttr('disabled');
+			}
+		}
+	}
 
 	function receiveData(q, data) {
 		if ( data && data.length && hasFocus ) {
+			$input.removeClass('ac_non_matching_input');
 			stopLoading();
 			select.display(data, q);
 			autoFill(q, data[0].value);
